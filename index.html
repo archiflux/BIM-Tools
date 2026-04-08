@@ -40,8 +40,8 @@
       line-height: 1.5;
       font-size: 14px;
       padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 100%;
     }
 
     h1 {
@@ -58,8 +58,8 @@
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 16px;
       margin-bottom: 32px;
     }
 
@@ -75,13 +75,20 @@
       color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      line-height: 1.3;
+      min-height: 32px;
     }
 
     .field-help {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-tertiary);
-      margin-top: 4px;
+      margin-top: 6px;
       line-height: 1.4;
+    }
+
+    .field-help strong {
+      font-weight: 600;
+      color: var(--text-secondary);
     }
 
     input, select {
@@ -127,54 +134,23 @@
 
     .number-group {
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
 
     .number-group select {
-      flex: 1.2;
+      flex: 1;
     }
 
     .number-group input {
-      flex: 0.8;
+      width: 50px;
+      flex-shrink: 0;
       text-align: center;
     }
 
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 24px 0;
-    }
-
-    .metadata-section {
+    .metadata-field {
       background: var(--bg-secondary);
       border-radius: 6px;
-      padding: 20px;
-      margin-bottom: 32px;
-    }
-
-    .metadata-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .metadata-title::before {
-      content: '';
-      display: inline-block;
-      width: 4px;
-      height: 4px;
-      background: var(--accent);
-      border-radius: 50%;
-    }
-
-    .metadata-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      padding: 12px;
     }
 
     .metadata-note {
@@ -182,6 +158,7 @@
       color: var(--error);
       font-weight: 500;
       margin-top: 6px;
+      line-height: 1.4;
     }
 
     .output-section {
@@ -342,13 +319,19 @@
       -moz-appearance: textfield;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 1200px) {
+      .form-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    @media (max-width: 800px) {
       body {
         padding: 16px;
       }
       
       .form-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
       }
       
       .button-group {
@@ -359,6 +342,12 @@
         width: 100%;
       }
     }
+
+    @media (max-width: 500px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -367,114 +356,123 @@
   <p class="subtitle">Generate compliant filenames for BIM information containers</p>
 
   <div class="form-grid">
+    <!-- Project Code -->
     <div class="field">
       <label class="field-label">Project Code</label>
-      <input type="text" id="code" maxlength="5" placeholder="e.g. 12345" style="text-transform: uppercase;">
-      <span class="field-help">ISO 19650 code from BEP, or internal job number</span>
+      <input type="text" id="code" maxlength="5" placeholder="" style="text-transform: uppercase;">
+      <span class="field-help">Add ISO 19650 code if agreed in the BEP. (Add Bailey Partnership internal job number if not yet agreed.)</span>
     </div>
 
+    <!-- Originator -->
     <div class="field">
-      <label class="field-label">Originator</label>
+      <label class="field-label">Originator Code</label>
       <input type="text" id="originator" maxlength="5" value="BPG" style="text-transform: uppercase;">
-      <span class="field-help">BPG for Bailey Partnership</span>
+      <span class="field-help">Leave originator code as 'BPG' for Bailey Partnership, or add a different Originator Code if produced by others.</span>
     </div>
 
+    <!-- Functional Breakdown -->
     <div class="field">
       <label class="field-label">Functional Breakdown</label>
       <div class="autocomplete-wrapper">
-        <input type="text" id="functional" maxlength="3" placeholder="e.g. ZZ" style="text-transform: uppercase;">
+        <input type="text" id="functional" maxlength="3" placeholder="" style="text-transform: uppercase;">
         <div class="autocomplete-list" id="functional-list"></div>
       </div>
-      <span class="field-help">ZZ = multiple, XX = not applicable</span>
+      <span class="field-help">Add Functional Breakdown: ZZ - Multiple subdivisions apply, XX - No subdivision applicable, 01, 02 etc. (Previously known as <strong>Zone</strong>).</span>
     </div>
 
+    <!-- Spatial Breakdown -->
     <div class="field">
       <label class="field-label">Spatial Breakdown</label>
       <div class="autocomplete-wrapper">
-        <input type="text" id="spatial" maxlength="3" placeholder="e.g. 01" style="text-transform: uppercase;">
+        <input type="text" id="spatial" maxlength="3" placeholder="" style="text-transform: uppercase;">
         <div class="autocomplete-list" id="spatial-list"></div>
       </div>
-      <span class="field-help">Level/zone reference</span>
+      <span class="field-help">Add Spatial Arrangement: ZZ - Multiple subdivisions apply, XX - No subdivision applicable, 01, 02, B1, B2 etc. (Previously known as <strong>Level</strong>).</span>
     </div>
 
+    <!-- Form Code -->
     <div class="field">
-      <label class="field-label">Form</label>
+      <label class="field-label">Form Code</label>
       <select id="form">
-        <option value="">Select form...</option>
+        <option value="">-- select --</option>
         <optgroup label="ISO 29845 Standard">
-          <option value="D">D - Drawing</option>
-          <option value="G">G - Graphic/Diagram</option>
-          <option value="I">I - Image</option>
-          <option value="L">L - List</option>
-          <option value="M">M - Model</option>
-          <option value="T">T - Textual</option>
-          <option value="V">V - Video/Audio</option>
+          <option value="D" title="Graphical depiction of shape, size, etc. of a physical part or assembly">D - Drawing</option>
+          <option value="G" title="Graphical/symbolic depiction">G - Graphic/Diagram</option>
+          <option value="I" title="Information in the form of a static image or picture">I - Image</option>
+          <option value="L" title="Information in the form of columns and rows, such as tables, spreadsheets and datasets">L - List</option>
+          <option value="M" title="2D or 3D physical or digital description of the ideal shape of the object(s) and or space(s)">M - Model</option>
+          <option value="T" title="Information in the form of characters and paragraphs">T - Textual</option>
+          <option value="V" title="Information in the form of moving images, animation or sound">V - Video/Audio</option>
         </optgroup>
         <optgroup label="Bailey Partnership Codes">
-          <option value="AA">AA - Agreement</option>
-          <option value="BQ">BQ - Bill of Quantities</option>
-          <option value="CA">CA - Calculations</option>
-          <option value="CO">CO - Correspondence</option>
-          <option value="CP">CP - Cost Plan</option>
-          <option value="CT">CT - Certificates</option>
-          <option value="FN">FN - File Note</option>
-          <option value="HS">HS - Health and Safety</option>
-          <option value="LE">LE - Letter</option>
-          <option value="MI">MI - Minutes/Notes</option>
-          <option value="NO">NO - Notices</option>
-          <option value="PH">PH - Photograph</option>
-          <option value="PP">PP - Presentation</option>
-          <option value="PR">PR - Programme</option>
-          <option value="RD">RD - Room Data Sheet</option>
-          <option value="RI">RI - Request for Information</option>
-          <option value="RP">RP - Report</option>
-          <option value="SH">SH - Schedule</option>
-          <option value="SK">SK - Sketch</option>
-          <option value="SP">SP - Specification</option>
-          <option value="TR">TR - Tracker</option>
+          <option value="AA" title="Contracts, bonds, warranties etc.">AA - Agreement*</option>
+          <option value="BQ">BQ - Bill of Quantities*</option>
+          <option value="CA">CA - Calculations*</option>
+          <option value="CO">CO - Correspondence*</option>
+          <option value="CP">CP - Cost Plan*</option>
+          <option value="CT">CT - Certificates*</option>
+          <option value="FN">FN - File Note*</option>
+          <option value="HS">HS - Health and Safety*</option>
+          <option value="LE">LE - Letter*</option>
+          <option value="MI">MI - Minutes/Notes*</option>
+          <option value="NO">NO - Notices*</option>
+          <option value="PH">PH - Photograph*</option>
+          <option value="PP">PP - Presentation*</option>
+          <option value="PR">PR - Programme*</option>
+          <option value="RD">RD - Room Data Sheet*</option>
+          <option value="RI">RI - Request for Information*</option>
+          <option value="RP">RP - Report*</option>
+          <option value="SH">SH - Schedule*</option>
+          <option value="SK">SK - Sketch*</option>
+          <option value="SP">SP - Specification*</option>
+          <option value="TR">TR - Tracker*</option>
         </optgroup>
       </select>
+      <span class="field-help">Select a relevant data container Form Classification. (Single character codes based on BS ISO 29845 apply. BP and agreed project-specific codes can be used.)</span>
     </div>
 
+    <!-- Discipline Code -->
     <div class="field">
-      <label class="field-label">Discipline</label>
+      <label class="field-label">Discipline Code</label>
       <select id="discipline">
-        <option value="">Select discipline...</option>
+        <option value="">-- select --</option>
         <option value="A">A - Architecture</option>
         <option value="B">B - Building Surveying</option>
-        <option value="BR">BR - Building Regs Principal Designer</option>
+        <option value="BR">BR - Building Regulations Principal Designer</option>
         <option value="C">C - Civil Engineering</option>
         <option value="CO">CO - Contractor</option>
         <option value="E">E - Electrical Engineering</option>
         <option value="F">F - Facilities/Asset Management</option>
         <option value="FE">FE - Fire Engineering</option>
         <option value="G">G - Ground Engineering</option>
-        <option value="H">H - Highways & Transport</option>
+        <option value="H">H - Highways & Transport Engineering</option>
         <option value="I">I - Interior Design</option>
         <option value="K">K - Client</option>
         <option value="L">L - Landscape Architecture</option>
         <option value="M">M - Mechanical Engineering</option>
-        <option value="ME">ME - Mechanical & Electrical</option>
+        <option value="ME">ME - Mechanical and Electrical Engineering</option>
         <option value="O">O - Other Discipline</option>
         <option value="P">P - Public Health Engineering</option>
         <option value="PD">PD - CDM Principal Designer</option>
-        <option value="Q">Q - Quantity Surveying</option>
+        <option value="Q">Q - Quantity Surveying/Cost Consultancy</option>
         <option value="R">R - Project Management</option>
         <option value="S">S - Structural Engineering</option>
-        <option value="T">T - Planning & Building Control</option>
+        <option value="T">T - Town & Country Planning & Building Control</option>
         <option value="W">W - Water Engineering</option>
-        <option value="X">X - Not Applicable</option>
+        <option value="X">X - Non-discipline Specific or Not Applicable</option>
         <option value="Y">Y - Topographical Surveying</option>
         <option value="Z">Z - Multiple Disciplines</option>
       </select>
+      <span class="field-help">Select a relevant Originator Discipline Code.</span>
     </div>
 
+    <!-- Unique Number -->
     <div class="field">
-      <label class="field-label">Number</label>
+      <label class="field-label">Unique Number</label>
       <div class="number-group">
         <select id="numberSeries">
           <option value="">Series...</option>
-          <option value="00">00 - General</option>
+          <option value="00">00 - For all documents not listed below</option>
           <option value="01">01 - Location Plan</option>
           <option value="02">02 - Site Plan</option>
           <option value="03">03 - GA Plan</option>
@@ -491,24 +489,24 @@
           <option value="15">15 - Setting Out</option>
           <option value="16">16 - Below Slab</option>
           <option value="17">17 - RCP</option>
-          <option value="18">18 - Area Plans GEA</option>
-          <option value="19">19 - Area Plans GIA</option>
-          <option value="20">20 - Area Plans NIA</option>
+          <option value="18">18 - Area Plans - GEA (Gross External Area)</option>
+          <option value="19">19 - Area Plans - GIA (Gross Internal Area)</option>
+          <option value="20">20 - Area Plans - NIA (Net Internal Area)</option>
           <option value="21">21 - Walls</option>
           <option value="22">22 - Partitions</option>
           <option value="23">23 - Floors</option>
-          <option value="24">24 - Stairs/Ramps</option>
+          <option value="24">24 - Stairs, Ramps</option>
           <option value="27">27 - Roof</option>
           <option value="31">31 - Doors</option>
           <option value="32">32 - Windows</option>
           <option value="33">33 - Screens</option>
           <option value="34">34 - Louvres</option>
           <option value="35">35 - Ceilings</option>
-          <option value="36">36 - Balconies</option>
+          <option value="36">36 - Balconies / Juliets etc</option>
           <option value="40">40 - Finishes</option>
-          <option value="42">42 - Wall Finishes</option>
+          <option value="42">42 - Internal Wall Finishes</option>
           <option value="43">43 - Floor Finishes</option>
-          <option value="50">50 - General Mech</option>
+          <option value="50">50 - General Mechanical</option>
           <option value="51">51 - Utilities</option>
           <option value="52">52 - Drainage</option>
           <option value="53">53 - Domestic Services</option>
@@ -516,14 +514,14 @@
           <option value="55">55 - Space Cooling</option>
           <option value="56">56 - Space Heating</option>
           <option value="57">57 - Ventilation</option>
-          <option value="58">58 - Public Health</option>
+          <option value="58">58 - Public Health & Raw Water</option>
           <option value="59">59 - Plant Misc</option>
-          <option value="60">60 - General Elec</option>
+          <option value="60">60 - General Electrical</option>
           <option value="61">61 - Distribution</option>
           <option value="62">62 - Small Power</option>
           <option value="63">63 - Lighting</option>
-          <option value="64">64 - Comms</option>
-          <option value="65">65 - Telecoms</option>
+          <option value="64">64 - Communications</option>
+          <option value="65">65 - Telecommunications</option>
           <option value="66">66 - Transport</option>
           <option value="67">67 - Fire System</option>
           <option value="68">68 - Security</option>
@@ -532,99 +530,101 @@
           <option value="71">71 - Signage</option>
           <option value="73">73 - Kitchens</option>
           <option value="74">74 - Sanitary</option>
-          <option value="77">77 - Specialist</option>
+          <option value="77">77 - Specialist fittings</option>
           <option value="80">80 - Structural</option>
           <option value="81">81 - RC Plans</option>
           <option value="82">82 - RC Section</option>
           <option value="83">83 - RC Detail</option>
-          <option value="84">84 - Connections</option>
+          <option value="84">84 - Structure Details/Connection details</option>
           <option value="85">85 - Drainage</option>
           <option value="86">86 - External Works</option>
           <option value="87">87 - Highways</option>
           <option value="88">88 - Conveyancing</option>
-          <option value="90">90 - Combined Ext</option>
-          <option value="91">91 - Hard Landscape</option>
-          <option value="92">92 - Soft Landscape</option>
-          <option value="95">95 - Combined M&E</option>
+          <option value="90">90 - Combined External Works</option>
+          <option value="91">91 - Hard Landscaping</option>
+          <option value="92">92 - Soft Landscaping</option>
+          <option value="95">95 - Combined Building Services</option>
           <option value="97">97 - Details</option>
           <option value="98">98 - 3D Views</option>
           <option value="99">99 - Sketches</option>
         </select>
         <input type="number" id="number" value="00" min="0" max="99" maxlength="2">
       </div>
-      <span class="field-help">Series prefix + sequential number</span>
+      <span class="field-help">Add a sequential number to make whole name unique. (Select from the BP standard series prefix to generate the first two digits automatically.)</span>
     </div>
 
+    <!-- Container Description -->
     <div class="field">
-      <label class="field-label">Description (Optional)</label>
-      <input type="text" id="description" placeholder="e.g. Ground Floor Plan">
-      <span class="field-help">Appended to filename</span>
+      <label class="field-label">Container Description</label>
+      <input type="text" id="description" placeholder="Description">
+      <span class="field-help">Add a meaningful description suffix. (Optional)</span>
     </div>
-  </div>
 
-  <div class="metadata-section">
-    <div class="metadata-title">Metadata Only (Not in Filename)</div>
-    <div class="metadata-grid">
-      <div class="field">
-        <label class="field-label">Suitability Code</label>
+    <!-- Suitability Code -->
+    <div class="field">
+      <label class="field-label">Suitability Code</label>
+      <div class="metadata-field">
         <select id="suitability">
-          <option value="">Select...</option>
+          <option value="">-- select --</option>
           <optgroup label="Work in Progress">
-            <option value="S0">S0 - Work in Progress</option>
+            <option value="S0">S0 - WORK IN PROGRESS (WIP - Revision and version P01.02, P01.03 etc.) being developed with a task team</option>
           </optgroup>
           <optgroup label="Shared (Non-contractual)">
-            <option value="S1">S1 - For Coordination</option>
-            <option value="S2">S2 - For Information</option>
-            <option value="S3">S3 - For Review & Comment</option>
-            <option value="S4">S4 - For Lead Review</option>
-            <option value="S5">S5 - For Client Acceptance</option>
+            <option value="S1">S1 - SHARED (Non-contractual - Revision P01, P02 etc.) suitable for geometrical and/or non-geometrical coordination within a delivery team</option>
+            <option value="S2">S2 - SHARED (Non-contractual - Revision P01, P02 etc.) suitable for information/reference by other task teams with a delivery team</option>
+            <option value="S3">S3 - SHARED (Non-contractual - Revision P01, P02 etc.) suitable for review and comment within a delivery team</option>
+            <option value="S4">S4 - SHARED (Non-contractual - Revision P01, P02 etc.) suitable for review and authorisation by a lead appointed party</option>
+            <option value="S5">S5 - SHARED (Non-contractual - Revision P01, P02 etc.) suitable for review and acceptance by an appointing party</option>
           </optgroup>
           <optgroup label="Published (Contractual)">
-            <option value="A1">A1 - Authorised Stage 1</option>
-            <option value="A2">A2 - Authorised Stage 2</option>
-            <option value="A3">A3 - Authorised Stage 3</option>
-            <option value="A4">A4 - Authorised Stage 4</option>
+            <option value="A1">A1 - PUBLISHED (Contractual - Revision C01, C02 etc.) where there are no comments from the party being invited to either: Authorise or Accept them</option>
+            <option value="A2">A2 - PUBLISHED (Contractual - Revision C01, C02 etc.) where there are no comments from the party being invited to either: Authorise or Accept them</option>
+            <option value="A3">A3 - PUBLISHED (Contractual - Revision C01, C02 etc.) where there are no comments from the party being invited to either: Authorise or Accept them</option>
+            <option value="A4">A4 - PUBLISHED (Contractual - Revision C01, C02 etc.) where there are no comments from the party being invited to either: Authorise or Accept them</option>
           </optgroup>
         </select>
-        <p class="metadata-note">Add to document, not filename. Use CDE metadata.</p>
+        <p class="metadata-note">Suitability code to be included on the documents, but not included within the file name. (This should be added as metadata within the CDE.)</p>
       </div>
+    </div>
 
-      <div class="field">
-        <label class="field-label">Revision</label>
-        <input type="text" id="revision" placeholder="e.g. P01 or C01">
-        <p class="metadata-note">Add to document, not filename. Use CDE metadata.</p>
+    <!-- Revision Number -->
+    <div class="field">
+      <label class="field-label">Revision Number</label>
+      <div class="metadata-field">
+        <input type="text" id="revision" placeholder="">
+        <p class="metadata-note">Revision code to be included on the documents, but not included within the file name. (This should be added as metadata within the CDE.)</p>
       </div>
     </div>
   </div>
 
   <div class="output-section">
     <div class="output-label">Generated Filename</div>
-    <input type="text" id="output" readonly placeholder="Fill in the fields above, then click Generate">
+    <input type="text" id="output" readonly placeholder="Fill in the inputs above, then click Generate Filename">
   </div>
 
   <div class="button-group">
     <button class="btn-primary" id="generate">Generate Filename</button>
-    <button class="btn-secondary" id="copy">Copy to Clipboard</button>
+    <button class="btn-secondary" id="copy">Copy Text to Clipboard</button>
     <button class="btn-secondary" id="clear">Clear All</button>
   </div>
 
-  <div class="toast" id="toast">Copied to clipboard</div>
+  <div class="toast" id="toast">Your ISO 19650 compliant filename has been copied to your clipboard.</div>
 
   <script>
     // Data arrays
     const functionalOptions = [
-      { code: 'ZZ', desc: 'Multiple subdivisions apply' },
-      { code: 'XX', desc: 'No subdivision applicable' },
-      { code: '01', desc: 'Zone 01' },
-      { code: '02', desc: 'Zone 02' },
-      { code: '03', desc: 'Zone 03' },
-      { code: '04', desc: 'Zone 04' },
-      { code: '05', desc: 'Zone 05' }
+      { code: 'ZZ', desc: 'Multiple subdivisions apply to this information container' },
+      { code: 'XX', desc: 'No subdivision is applicable to this information container' },
+      { code: '01', desc: 'Zone 01 (should be agreed in the BIM execution plan stage)' },
+      { code: '02', desc: 'Zone 02 (should be agreed in the BIM execution plan stage)' },
+      { code: '03', desc: 'Zone 03 (should be agreed in the BIM execution plan stage)' },
+      { code: '04', desc: 'Zone 04 (should be agreed in the BIM execution plan stage)' },
+      { code: '05', desc: 'Zone 05 (should be agreed in the BIM execution plan stage)' }
     ];
 
     const spatialOptions = [
-      { code: 'ZZ', desc: 'Multiple spatial subdivisions' },
-      { code: 'XX', desc: 'No spatial subdivision' },
+      { code: 'ZZ', desc: 'Multiple spatial subdivisions are applicable' },
+      { code: 'XX', desc: 'No spatial subdivision is applicable' },
       { code: '00', desc: 'Base Level' },
       { code: '01', desc: 'Level 01' },
       { code: '02', desc: 'Level 02' },
@@ -636,14 +636,21 @@
       { code: '08', desc: 'Level 08' },
       { code: '09', desc: 'Level 09' },
       { code: '10', desc: 'Level 10' },
-      { code: 'M1', desc: 'Mezzanine above L01' },
-      { code: 'M2', desc: 'Mezzanine above L02' },
-      { code: 'M3', desc: 'Mezzanine above L03' },
+      { code: 'M1', desc: 'Mezzanine above level 01' },
+      { code: 'M2', desc: 'Mezzanine above level 02' },
+      { code: 'M3', desc: 'Mezzanine above level 03' },
+      { code: 'M4', desc: 'Mezzanine above level 04' },
+      { code: 'M5', desc: 'Mezzanine above level 05' },
       { code: 'B1', desc: 'Basement Level 01' },
       { code: 'B2', desc: 'Basement Level 02' },
       { code: 'B3', desc: 'Basement Level 03' },
+      { code: 'B4', desc: 'Basement Level 04' },
+      { code: 'B5', desc: 'Basement Level 05' },
       { code: 'F1', desc: 'Foundation Level 01' },
-      { code: 'F2', desc: 'Foundation Level 02' }
+      { code: 'F2', desc: 'Foundation Level 02' },
+      { code: 'F3', desc: 'Foundation Level 03' },
+      { code: 'F4', desc: 'Foundation Level 04' },
+      { code: 'F5', desc: 'Foundation Level 05' }
     ];
 
     // Autocomplete setup
@@ -652,20 +659,23 @@
       const list = document.getElementById(listId);
       let currentFocus = -1;
 
+      input.addEventListener('focus', function() {
+        showList('');
+      });
+
       input.addEventListener('input', function() {
-        const val = this.value.toUpperCase();
+        showList(this.value.toUpperCase());
+      });
+
+      function showList(val) {
         list.innerHTML = '';
         currentFocus = -1;
 
-        if (!val) {
-          list.classList.remove('active');
-          return;
-        }
-
-        const matches = options.filter(opt => 
-          opt.code.toUpperCase().startsWith(val) || 
-          opt.desc.toUpperCase().includes(val)
-        );
+        const matches = val ? 
+          options.filter(opt => 
+            opt.code.toUpperCase().startsWith(val) || 
+            opt.desc.toUpperCase().includes(val)
+          ) : options;
 
         if (matches.length === 0) {
           list.classList.remove('active');
@@ -684,14 +694,16 @@
         });
 
         list.classList.add('active');
-      });
+      }
 
       input.addEventListener('keydown', function(e) {
         const items = list.querySelectorAll('.autocomplete-item');
         if (e.key === 'ArrowDown') {
+          e.preventDefault();
           currentFocus++;
           setActive(items);
         } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
           currentFocus--;
           setActive(items);
         } else if (e.key === 'Enter') {
@@ -706,7 +718,10 @@
         items.forEach(item => item.classList.remove('active'));
         if (currentFocus >= items.length) currentFocus = 0;
         if (currentFocus < 0) currentFocus = items.length - 1;
-        if (items[currentFocus]) items[currentFocus].classList.add('active');
+        if (items[currentFocus]) {
+          items[currentFocus].classList.add('active');
+          items[currentFocus].scrollIntoView({ block: 'nearest' });
+        }
       }
 
       document.addEventListener('click', (e) => {
@@ -752,17 +767,40 @@
       let description = document.getElementById('description').value.trim();
 
       // Validation
-      const errors = [];
-      if (!code) { errors.push('Project Code'); document.getElementById('code').classList.add('error'); }
-      if (!originator) { errors.push('Originator'); document.getElementById('originator').classList.add('error'); }
-      if (!functional) { errors.push('Functional Breakdown'); document.getElementById('functional').classList.add('error'); }
-      if (!spatial) { errors.push('Spatial Breakdown'); document.getElementById('spatial').classList.add('error'); }
-      if (!form) { errors.push('Form'); document.getElementById('form').classList.add('error'); }
-      if (!discipline) { errors.push('Discipline'); document.getElementById('discipline').classList.add('error'); }
-
-      if (errors.length > 0) {
-        output.value = `Missing: ${errors.join(', ')}`;
+      if (!code) {
+        output.value = 'Please fill in Project Code';
         output.classList.add('error');
+        document.getElementById('code').classList.add('error');
+        return;
+      }
+      if (!originator) {
+        output.value = 'Please fill in Originator Code';
+        output.classList.add('error');
+        document.getElementById('originator').classList.add('error');
+        return;
+      }
+      if (!functional) {
+        output.value = 'Please fill in Functional Breakdown';
+        output.classList.add('error');
+        document.getElementById('functional').classList.add('error');
+        return;
+      }
+      if (!spatial) {
+        output.value = 'Please fill in Spatial Breakdown';
+        output.classList.add('error');
+        document.getElementById('spatial').classList.add('error');
+        return;
+      }
+      if (!form) {
+        output.value = 'Please select a container form';
+        output.classList.add('error');
+        document.getElementById('form').classList.add('error');
+        return;
+      }
+      if (!discipline) {
+        output.value = 'Please select a container discipline';
+        output.classList.add('error');
+        document.getElementById('discipline').classList.add('error');
         return;
       }
 
@@ -791,7 +829,7 @@
       if (!output.value || output.classList.contains('error')) return;
 
       navigator.clipboard.writeText(output.value).then(() => {
-        showToast('Copied to clipboard');
+        showToast('Your ISO 19650 compliant filename has been copied to your clipboard.');
       });
     });
 
@@ -809,6 +847,7 @@
       document.getElementById('suitability').value = '';
       document.getElementById('revision').value = '';
       document.getElementById('output').value = '';
+      document.getElementById('output').placeholder = 'Fill in the inputs above, then click Generate Filename';
       document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
       document.getElementById('output').classList.remove('error', 'success');
     });
@@ -818,7 +857,7 @@
       const toast = document.getElementById('toast');
       toast.textContent = message;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     // Enter key triggers generate
