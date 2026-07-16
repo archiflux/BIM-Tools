@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bailey Partnership | Uniclass Explorer</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --card-hover: #f8fafc;
+            --card-active: #eef2ff;
+            --card-border: #e2e8f0;
+            --accent: #4f46e5;
+            --active-stroke: #6366f1;
+            --col-width: 285px;
+            --col-gap: 50px;
+            /* LEISURELY, CINEMATIC PANNING PHYSICS */
+            --pan-speed: 1.1s;
+            --ease-out: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Minimal Header */
+        header {
+            padding: 1.25rem 2.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        header h1 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
+        header h1 span { color: var(--accent); font-weight: 400; }
+        
+        .status-pill { 
+            font-size: 0.8rem; 
+            background: #f8fafc; 
+            padding: 0.45rem 1.15rem; 
+            border-radius: 99px; 
+            color: var(--text-main); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 500;
+            border: 1px solid var(--card-border);
+            max-width: 55vw;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+        }
+
+        /* Viewport Stage */
+        .viewport {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            width: 100vw;
+        }
+
+        /* SVG Connecting Lines Canvas Layer */
+        #svg-layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .connection-line {
+            fill: none;
+            stroke-linecap: round;
+            transition: opacity 0.6s ease;
+        }
+
+        /* TIER 1: Vibrant Active Route */
+        .active-line {
+            stroke: var(--active-stroke);
+            stroke-width: 2.5px;
+            opacity: 0.85;
+        }
+
+        /* TIER 2: Gray Alternate Options */
+        .branch-line {
+            stroke: #cbd5e1;
+            stroke-width: 1.5px;
+            opacity: 0.45;
+        }
+
+        /* The Infinite Conveyor Track */
+        .track {
+            display: flex;
+            gap: var(--col-gap);
+            position: absolute;
+            height: 100%;
+            left: 50%;
+            transition: transform var(--pan-speed) var(--ease-out);
+            will-change: transform;
+            z-index: 10;
+        }
+
+        /* Invisible Column Wrappers */
+        .col {
+            width: var(--col-width);
+            min-width: var(--col-width);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.8s ease;
+        }
+
+        /* Smooth Top & Bottom Fade-Out Mask */
+        .scroll-area {
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-top: calc(50vh - 50px);
+            padding-bottom: calc(50vh - 50px);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            scrollbar-width: none;
+        }
+        .scroll-area::-webkit-scrollbar { display: none; }
+
+        /* Floating Card Styling */
+        .card {
+            background: transparent;
+            border: none;
+            padding: 0.95rem 1.15rem;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.4s ease, opacity 0.6s ease, transform 0.5s var(--ease-out);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .card:hover {
+            background: var(--card-hover);
+        }
+
+        /* UNMISTAKABLE Clicked State */
+        .card.active-path {
+            background: var(--card-active);
+            transform: scale(1.04);
+            z-index: 15;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+        }
+
+        .card.active-path .title {
+            color: #4f46e5;
+            font-weight: 700;
+        }
+
+        .card.active-path .code {
+            color: #4338ca;
+            background: rgba(79, 70, 229, 0.1);
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+        }
+
+        /* Faint Ghost Sibling State */
+        .card.faint-item {
+            opacity: 0.15;
+        }
+
+        .code {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--text-main);
+            transition: color 0.3s ease;
+        }
+
+        .meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Minimalist Fuzzy Search Box */
+        .search-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2.5rem;
+            z-index: 500;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: flex-end;
+            gap: 0.75rem;
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            padding: 0.75rem 1.4rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            width: 160px;
+            transition: all 0.4s var(--ease-out);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .search-input:focus, .search-input:not(:placeholder-shown) {
+            width: 320px;
+            background: #ffffff;
+            border-color: var(--accent);
+            box-shadow: 0 12px 32px rgba(79, 70, 229, 0.15);
+        }
+
+        .search-results {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            width: 360px;
+            max-height: 380px;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+            display: none;
+            flex-direction: column;
+            padding: 0.5rem;
+            gap: 0.25rem;
+            animation: searchPopIn 0.25s var(--ease-out);
+        }
+
+        @keyframes searchPopIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .search-result-item:hover {
+            background: var(--card-hover);
+        }
+
+        .search-result-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-result-code {
+            color: var(--accent);
+            font-family: monospace;
+            font-size: 0.75rem;
+            background: var(--card-active);
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+        }
+
+        .search-result-path {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @keyframes columnSlideIn {
+            from { opacity: 0; transform: translateX(35px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .col-animate-in {
+            animation: columnSlideIn 0.85s var(--ease-out) forwards;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            gap: 1rem;
+        }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f1f5f9;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay" class="overlay">
+        <div class="spinner"></div>
+        <div style="color: var(--text-muted); font-size: 0.9rem;">Loading Architecture...</div>
+    </div>
+
+    <header>
+        <h1>Bailey Partnership <span>| Uniclass Explorer</span></h1>
+        <div class="status-pill" id="breadcrumb-pill">Root</div>
+    </header>
+
+    <div class="viewport" id="viewport">
+        <svg id="svg-layer"></svg>
+        
+        <div class="track" id="track"></div>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-input" id="search-input" placeholder="Search..." autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+    </div>
+
+    <script>
+        let openColumns = [];
+        let allNodesFlat = [];
+        let globalRootData = null;
+        const track = document.getElementById("track");
+        const svgLayer = document.getElementById("svg-layer");
+        const viewport = document.getElementById("viewport");
+        const overlay = document.getElementById("loading-overlay");
+        const searchInput = document.getElementById("search-input");
+        const searchResults = document.getElementById("search-results");
+
+        // 1. FETCH JSON DATA & START WITH BLANK SLATE
+        fetch('uniclass_data.json')
+            .then(response => {
+                if (!response.ok) throw new Error("Could not load uniclass_data.json");
+                return response.json();
+            })
+            .then(data => {
+                overlay.style.display = "none";
+                globalRootData = data;
+                
+                indexAllNodes(data, null);
+
+                // STARTUP STATE: Load ONLY Column 0 with no active selection.
+                openColumns = [{
+                    sourceNodes: [globalRootData],
+                    activeParentId: "root",
+                    clickedNodeId: null,
+                    renderedNodes: []
+                }];
+                renderColumn(0, false);
+                
+                updateHorizontalPan();
+                updateBreadcrumb();
+                triggerLineAnimationLoop(1000);
+            })
+            .catch(error => {
+                overlay.innerHTML = `
+                    <div style="color: #ef4444; font-weight: bold; font-size: 1.1rem;">⚠️ Failed to load JSON Data</div>
+                    <div style="color: var(--text-muted); max-width: 450px; text-align: center; font-size: 0.9rem; line-height: 1.6;">
+                        Ensure <b>uniclass_data.json</b> is saved in the exact same directory as this HTML file.<br><br>
+                        <i>Note: Opening HTML files directly (file://) blocks external JSON fetching due to CORS security. Please run a local server or use VS Code Live Server!</i>
+                    </div>
+                `;
+            });
+
+        function indexAllNodes(node, parent) {
+            node._parent = parent;
+            // FIX: Explicitly assign "root" as parent ID for top-level items so they load 100% opaque!
+            node._parentId = parent ? parent.id : "root"; 
+            
+            if (node.id !== 'root' && node.code !== 'Uniclass 2015') {
+                allNodesFlat.push(node);
+            }
+            if (node.children && node.children.length > 0) {
+                node.children.forEach(child => indexAllNodes(child, node));
+            }
+        }
+
+        // 2. UNIVERSAL ALIGNMENT ENGINE (Strict Rule Enforcer)
+        function alignColumn(colIndex, smooth = false) {
+            const colData = openColumns[colIndex];
+            const colDom = track.children[colIndex];
+            if (!colData || !colDom) return;
+
+            let targetCard;
+
+            if (colData.clickedNodeId) {
+                // RULE 1: If a card is clicked, ALWAYS center it regardless of what column it is in.
+                targetCard = colDom.querySelector(`.card[data-id="${colData.clickedNodeId}"]`);
+            } else {
+                // RULE 2: If nothing is clicked (new column), align the active group.
+                const groupCards = colDom.querySelectorAll(`.card[data-parent-id="${colData.activeParentId}"]`);
+                if (groupCards.length > 0) {
+                    if (colIndex === 1) {
+                        // Level 2 aligns its FIRST item to center of screen (matching root position)
+                        targetCard = groupCards[0];
+                    } else {
+                        // Deeper levels align the MIDDLE item to center of screen
+                        targetCard = groupCards[Math.floor(groupCards.length / 2)];
+                    }
+                }
+            }
+
+            if (targetCard) {
+                setTimeout(() => {
+                    targetCard.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'center' });
+                    triggerLineAnimationLoop(1200);
+                }, 10);
+            }
+        }
+
+        // 3. RENDER COLUMN
+        function renderColumn(colIndex, animate = true) {
+            const colData = openColumns[colIndex];
+            if (!colData || !colData.sourceNodes) return;
+            
+            let allChildren = [];
+            colData.sourceNodes.forEach(parent => {
+                if (parent && parent.children && Array.isArray(parent.children) && parent.children.length > 0) {
+                    parent.children.forEach(child => {
+                        if (child) {
+                            child._parentId = parent.id;
+                            allChildren.push(child);
+                        }
+                    });
+                }
+            });
+
+            colData.renderedNodes = allChildren;
+
+            if (allChildren.length === 0) return;
+
+            const colDiv = document.createElement("div");
+            colDiv.className = `col ${animate ? 'col-animate-in' : ''}`;
+            colDiv.dataset.colIndex = colIndex;
+
+            const scrollArea = document.createElement("div");
+            scrollArea.className = "scroll-area";
+
+            allChildren.forEach(childNode => {
+                const card = document.createElement("div");
+                const isOpaqueGroup = childNode._parentId === colData.activeParentId;
+                
+                card.className = `card ${isOpaqueGroup ? '' : 'faint-item'} ${childNode.id === colData.clickedNodeId ? 'active-path' : ''}`;
+                card.dataset.id = childNode.id;
+                card.dataset.parentId = childNode._parentId;
+
+                const hasChildren = childNode.children && childNode.children.length > 0;
+                
+                card.innerHTML = `
+                    <span class="code">${childNode.code}</span>
+                    <div class="title">${childNode.title}</div>
+                    ${hasChildren ? `
+                    <div class="meta">
+                        <span>${childNode.children.length} subfolders</span>
+                        <span>→</span>
+                    </div>` : ''}
+                `;
+
+                card.addEventListener("click", () => handleCardClick(colIndex, childNode, card));
+                scrollArea.appendChild(card);
+            });
+
+            scrollArea.addEventListener("scroll", () => requestAnimationFrame(drawConnections));
+
+            colDiv.appendChild(scrollArea);
+            track.appendChild(colDiv);
+
+            // Execute universal alignment
+            alignColumn(colIndex, false);
+        }
+
+        // 4. BACKWARD ANCESTRY SYNC ENGINE
+        function syncParentHierarchy(colIndex, childNode) {
+            let currentChild = childNode;
+            for (let i = colIndex; i > 0; i--) {
+                const parentId = currentChild._parentId || currentChild._parent?.id;
+                if (!parentId) break;
+
+                const prevColData = openColumns[i - 1];
+                const prevColDom = track.children[i - 1];
+                if (!prevColDom || !prevColData) break;
+
+                prevColData.clickedNodeId = parentId;
+                
+                prevColDom.querySelectorAll('.card').forEach(c => {
+                    if (c.dataset.id === parentId) {
+                        c.classList.add('active-path');
+                        const grandParentId = c.dataset.parentId;
+                        if (prevColData.activeParentId !== grandParentId) {
+                            prevColData.activeParentId = grandParentId;
+                            prevColDom.querySelectorAll('.card').forEach(sib => {
+                                if (sib.dataset.parentId === grandParentId) sib.classList.remove('faint-item');
+                                else sib.classList.add('faint-item');
+                            });
+                        }
+                    } else {
+                        c.classList.remove('active-path');
+                    }
+                });
+
+                // Smoothly update alignment based on new ancestry path!
+                alignColumn(i - 1, true);
+
+                if (prevColData.renderedNodes) {
+                    currentChild = prevColData.renderedNodes.find(n => n.id === parentId) || { _parentId: prevColData.activeParentId };
+                } else {
+                    currentChild = { _parentId: prevColData.activeParentId };
+                }
+            }
+        }
+
+        // 5. CLICK: THE SINGLE SOURCE OF TRUTH
+        function handleCardClick(colIndex, childNode, clickedCard) {
+            if (!openColumns[colIndex]) return;
+            openColumns[colIndex].clickedNodeId = childNode.id;
+
+            const currentColDom = track.children[colIndex];
+            const parentId = childNode._parentId || childNode._parent?.id;
+            
+            if (openColumns[colIndex].activeParentId !== parentId) {
+                openColumns[colIndex].activeParentId = parentId;
+                currentColDom.querySelectorAll('.card').forEach(c => {
+                    if (c.dataset.parentId === parentId) c.classList.remove('faint-item');
+                    else c.classList.add('faint-item');
+                });
+            }
+
+            currentColDom.querySelectorAll('.card').forEach(c => c.classList.remove('active-path'));
+            clickedCard.classList.add('active-path');
+
+            // Trigger universal alignment on the clicked column!
+            alignColumn(colIndex, true);
+            syncParentHierarchy(colIndex, childNode);
+
+            const hasChildren = childNode.children && childNode.children.length > 0;
+            const nextColExists = openColumns.length > colIndex + 1;
+
+            if (hasChildren) {
+                const sourceNodesForNext = openColumns[colIndex].renderedNodes;
+                let canReuseNextCol = false;
+
+                if (nextColExists) {
+                    const nextColData = openColumns[colIndex + 1];
+                    if (nextColData.sourceNodes === sourceNodesForNext) {
+                        canReuseNextCol = true;
+                    }
+                }
+
+                if (canReuseNextCol) {
+                    const nextColData = openColumns[colIndex + 1];
+                    const nextColDom = track.children[colIndex + 1];
+                    
+                    nextColData.activeParentId = childNode.id;
+                    nextColData.clickedNodeId = null;
+
+                    nextColDom.querySelectorAll('.card').forEach(c => {
+                        c.classList.remove('active-path');
+                        if (c.dataset.parentId === childNode.id) c.classList.remove('faint-item');
+                        else c.classList.add('faint-item');
+                    });
+
+                    alignColumn(colIndex + 1, true);
+
+                    while (openColumns.length > colIndex + 2) {
+                        openColumns.pop();
+                        track.lastElementChild?.remove();
+                    }
+                } else {
+                    while (openColumns.length > colIndex + 1) {
+                        openColumns.pop();
+                        track.lastElementChild?.remove();
+                    }
+
+                    openColumns.push({
+                        sourceNodes: sourceNodesForNext,
+                        activeParentId: childNode.id,
+                        clickedNodeId: null,
+                        renderedNodes: []
+                    });
+                    renderColumn(colIndex + 1, true);
+                }
+            } else {
+                while (openColumns.length > colIndex + 1) {
+                    openColumns.pop();
+                    track.lastElementChild?.remove();
+                }
+            }
+
+            updateHorizontalPan();
+            updateColumnOpacities();
+            updateBreadcrumb();
+            triggerLineAnimationLoop(1500);
+        }
+
+        // 6. DRAW SINEWY LINES
+        function drawConnections() {
+            svgLayer.innerHTML = "";
+            const viewportRect = viewport.getBoundingClientRect();
+
+            let branchPaths = [];
+            let activePaths = [];
+
+            for (let i = 0; i < openColumns.length - 1; i++) {
+                const colA = track.children[i];
+                const colB = track.children[i + 1];
+                if (!colA || !colB || !openColumns[i] || !openColumns[i+1]) continue;
+
+                const activeNodeIdA = openColumns[i].clickedNodeId;
+                const activeNodeIdB = openColumns[i+1].clickedNodeId;
+                if (!activeNodeIdA) continue;
+
+                const cardA = colA.querySelector(`.card[data-id="${activeNodeIdA}"]`);
+                if (!cardA) continue;
+
+                const rectA = cardA.getBoundingClientRect();
+                const x1 = rectA.right - viewportRect.left;
+                const y1 = rectA.top + (rectA.height / 2) - viewportRect.top;
+
+                const cardsB = colB.querySelectorAll(`.card[data-parent-id="${activeNodeIdA}"]`);
+                cardsB.forEach(cardB => {
+                    const rectB = cardB.getBoundingClientRect();
+                    const x2 = rectB.left - viewportRect.left;
+                    const y2 = rectB.top + (rectB.height / 2) - viewportRect.top;
+
+                    const dx = (x2 - x1) * 0.55;
+
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("d", `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
+
+                    if (cardB.dataset.id === activeNodeIdB) {
+                        path.setAttribute("class", "connection-line active-line");
+                        activePaths.push(path);
+                    } else {
+                        path.setAttribute("class", "connection-line branch-line");
+                        branchPaths.push(path);
+                    }
+                });
+            }
+
+            branchPaths.forEach(p => svgLayer.appendChild(p));
+            activePaths.forEach(p => svgLayer.appendChild(p));
+        }
+
+        function triggerLineAnimationLoop(duration = 1500) {
+            let start = performance.now();
+            function loop(now) {
+                drawConnections();
+                if (now - start < duration) {
+                    requestAnimationFrame(loop);
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // 7. PAN TRACK
+        function updateHorizontalPan() {
+            const step = 285 + 50;
+            const M = openColumns.length;
+            let offset = M === 1 ? 285 / 2 : (M - 1) * step + (285 / 2);
+            track.style.transform = `translateX(-${offset}px)`;
+            setTimeout(() => triggerLineAnimationLoop(1200), 50);
+        }
+
+        // 8. FADE OUT DEEP HISTORICAL COLUMNS
+        function updateColumnOpacities() {
+            const M = openColumns.length;
+            track.querySelectorAll('.col').forEach((colDom, idx) => {
+                const dist = (M - 1) - idx;
+                if (dist <= 1) colDom.style.opacity = "1";
+                else if (dist === 2) colDom.style.opacity = "0.45";
+                else colDom.style.opacity = "0.15";
+            });
+        }
+
+        // 9. LOGICAL BREADCRUMB
+        function updateBreadcrumb() {
+            const clickedNodes = openColumns
+                .map(col => col.clickedNodeId ? allNodesFlat.find(n => n.id === col.clickedNodeId) : null)
+                .filter(Boolean);
+
+            if (clickedNodes.length === 0) {
+                document.getElementById("breadcrumb-pill").innerText = "Root";
+                return;
+            }
+
+            let parts = [];
+            clickedNodes.forEach((node, index) => {
+                if (index === 0) {
+                    let codeStr = (node.code || '').trim();
+                    let titleStr = (node.title || '').trim();
+                    if (codeStr.toLowerCase() === titleStr.toLowerCase() || titleStr === '') {
+                        parts.push(codeStr);
+                    } else if (titleStr.toLowerCase().startsWith(codeStr.toLowerCase())) {
+                        parts.push(titleStr);
+                    } else {
+                        parts.push(`${codeStr} ${titleStr}`);
+                    }
+                } else if (index === clickedNodes.length - 1) {
+                    const suffix = node.code.includes('_') ? node.code.split('_').pop() : node.code;
+                    parts.push(`${suffix} ${node.title}`);
+                } else {
+                    const suffix = node.code.includes('_') ? node.code.split('_').pop() : node.code;
+                    parts.push(suffix);
+                }
+            });
+
+            document.getElementById("breadcrumb-pill").innerText = parts.join(" / ");
+        }
+
+        // 10. FUZZY SEARCH
+        searchInput.addEventListener("input", (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (!query) {
+                searchResults.style.display = "none";
+                return;
+            }
+
+            const terms = query.split(/\s+/);
+            const matches = allNodesFlat
+                .map(node => {
+                    const code = (node.code || '').toLowerCase();
+                    const title = (node.title || '').toLowerCase();
+                    const fullText = `${code} ${title}`;
+                    
+                    const allTermsMatch = terms.every(t => fullText.includes(t));
+                    if (!allTermsMatch) return { node, score: -1 };
+                    
+                    let score = 0;
+                    if (code === query || title === query) score += 100;
+                    else if (code.startsWith(query)) score += 50;
+                    else if (title.startsWith(query)) score += 30;
+                    else score += 10;
+                    
+                    return { node, score };
+                })
+                .filter(item => item.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 8);
+
+            if (matches.length === 0) {
+                searchResults.innerHTML = `<div style="padding: 0.8rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No Uniclass folders found</div>`;
+            } else {
+                searchResults.innerHTML = "";
+                matches.forEach(({ node }) => {
+                    const item = document.createElement("div");
+                    item.className = "search-result-item";
+                    
+                    let pathNames = [];
+                    let curr = node._parent;
+                    while (curr && curr.id !== 'root' && curr.code !== 'Uniclass 2015') {
+                        pathNames.unshift(curr.code);
+                        curr = curr._parent;
+                    }
+                    const pathStr = pathNames.length > 0 ? pathNames.join(" → ") : "Top Level";
+
+                    item.innerHTML = `
+                        <div class="search-result-title">
+                            <span class="search-result-code">${node.code}</span>
+                            <span>${node.title}</span>
+                        </div>
+                        <div class="search-result-path">Inside: ${pathStr}</div>
+                    `;
+
+                    item.addEventListener("click", () => {
+                        jumpToNode(node);
+                        searchResults.style.display = "none";
+                        searchInput.value = "";
+                    });
+
+                    searchResults.appendChild(item);
+                });
+            }
+
+            searchResults.style.display = "flex";
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest(".search-container")) {
+                searchResults.style.display = "none";
+            }
+        });
+
+        function jumpToNode(targetNode) {
+            if (!targetNode || !globalRootData) return;
+
+            let path = [targetNode];
+            let curr = targetNode._parent;
+            while (curr && curr !== globalRootData) {
+                path.unshift(curr);
+                curr = curr._parent;
+            }
+
+            openColumns = [];
+            track.innerHTML = "";
+
+            for (let i = 0; i < path.length; i++) {
+                const node = path[i];
+                let sourceNodes = [];
+                
+                if (i === 0) {
+                    sourceNodes = [globalRootData];
+                } else {
+                    sourceNodes = openColumns[i - 1].renderedNodes;
+                }
+
+                openColumns.push({
+                    sourceNodes: sourceNodes,
+                    activeParentId: node._parent?.id || node._parentId || "root",
+                    clickedNodeId: node.id,
+                    renderedNodes: []
+                });
+                renderColumn(i, false);
+            }
+
+            if (targetNode && targetNode.children && Array.isArray(targetNode.children) && targetNode.children.length > 0) {
+                openColumns.push({
+                    sourceNodes: openColumns[path.length - 1].renderedNodes,
+                    activeParentId: targetNode.id,
+                    clickedNodeId: null,
+                    renderedNodes: []
+                });
+                renderColumn(path.length, false);
+            }
+
+            updateHorizontalPan();
+            updateColumnOpacities();
+            updateBreadcrumb();
+
+            setTimeout(() => {
+                openColumns.forEach((colData, colIdx) => {
+                    alignColumn(colIdx, false);
+                });
+                triggerLineAnimationLoop(2500);
+            }, 60);
+        }
+
+        window.addEventListener("resize", () => requestAnimationFrame(() => drawConnections()));
+    </script>
+</body>
+</html>
